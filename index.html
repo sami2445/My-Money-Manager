@@ -1,0 +1,249 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Money Manager</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.hidden{display:none!important}.wrap{max-width:1100px;margin:auto;padding:20px}
+.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:white;border-radius:18px;padding:24px;box-shadow:0 8px 30px rgba(20,35,60,.09)}
+.auth .card{width:100%;max-width:420px}.brand{text-align:center;margin-bottom:22px}.brand h1{margin:0 0 7px}.brand p{margin:0;color:#687386}
+h2,h3{margin-top:0}.field{margin:13px 0}.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:6px;color:#566174}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid #d7deea;border-radius:10px;background:#fff;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#4b76ff}.btn{border:0;border-radius:10px;padding:11px 15px;background:#2f62e9;color:white;font-weight:bold}.btn.secondary{background:#eef2f8;color:#283449}.btn.danger{background:#dc3545}.btn.full{width:100%}
+.msg{padding:10px;border-radius:10px;margin:12px 0;font-size:14px}.msg.error{background:#ffe9ec;color:#a51d2d}.msg.ok{background:#e7f8ee;color:#176b3a}
+.link{text-align:center;margin-top:14px;color:#2f62e9;cursor:pointer;font-size:14px}
+header{background:#14213d;color:#fff}.top{max-width:1100px;margin:auto;padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.top h1{font-size:21px;margin:0}
+.user{font-size:12px;opacity:.8}.nav{max-width:1100px;margin:auto;padding:0 20px 14px;display:flex;gap:8px;overflow:auto}.nav button{white-space:nowrap;border:0;background:#223354;color:#fff;padding:9px 12px;border-radius:9px}.nav button.active{background:#fff;color:#14213d}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0}.stat{padding:18px;border-radius:15px;background:white;box-shadow:0 4px 18px rgba(20,35,60,.06)}.stat small{color:#687386}.stat strong{display:block;font-size:22px;margin-top:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.section{margin-bottom:18px}
+.table-wrap{overflow:auto;background:white;border-radius:14px}.table{width:100%;border-collapse:collapse;min-width:650px}.table th,.table td{padding:11px;border-bottom:1px solid #edf0f5;text-align:left;font-size:13px}.table th{background:#f8faff}.actions{display:flex;gap:7px}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.fullcol{grid-column:1/-1}
+.empty{padding:30px;text-align:center;color:#788397}
+.modal{position:fixed;inset:0;background:rgba(10,20,40,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:5}.modal .card{width:100%;max-width:500px}
+@media(max-width:750px){.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.nav{padding-bottom:10px}.wrap{padding:14px}.stat strong{font-size:18px}}
+</style>
+</head>
+<body>
+
+<div id="authScreen" class="auth">
+  <div class="card">
+    <div class="brand"><h1>💰 My Money Manager</h1><p>Simple personal money management</p></div>
+
+    <div id="loginBox">
+      <h2>Login</h2>
+      <div id="loginMsg"></div>
+      <div class="field"><label>Email</label><input id="loginEmail" type="email" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password"></div>
+      <button class="btn full" onclick="login()">Login</button>
+      <div class="link" onclick="showRegister()">Create Account</div>
+      <div class="link" onclick="forgotPassword()">Forgot Password?</div>
+    </div>
+
+    <div id="registerBox" class="hidden">
+      <h2>Create Account</h2>
+      <div id="registerMsg"></div>
+      <div class="field"><label>Name</label><input id="regName" type="text"></div>
+      <div class="field"><label>Email</label><input id="regEmail" type="email" autocomplete="email"></div>
+      <div class="field"><label>Password</label><input id="regPassword" type="password" autocomplete="new-password"></div>
+      <div class="field"><label>Confirm Password</label><input id="regConfirm" type="password" autocomplete="new-password"></div>
+      <button class="btn full" onclick="register()">Create Account</button>
+      <div class="link" onclick="showLogin()">Already have an account? Login</div>
+    </div>
+  </div>
+</div>
+
+<div id="appScreen" class="hidden">
+<header>
+  <div class="top"><div><h1>💰 My Money Manager</h1><div class="user" id="userEmail"></div></div><button class="btn secondary" onclick="logout()">Logout</button></div>
+  <div class="nav">
+    <button data-tab="dashboard" class="active" onclick="tab('dashboard')">Dashboard</button>
+    <button data-tab="income" onclick="tab('income')">Income</button>
+    <button data-tab="expense" onclick="tab('expense')">Expense</button>
+    <button data-tab="receivables" onclick="tab('receivables')">Receivable</button>
+    <button data-tab="payables" onclick="tab('payables')">Payable</button>
+    <button data-tab="transfers" onclick="tab('transfers')">Transfers</button>
+  </div>
+</header>
+
+<main class="wrap">
+<section id="dashboardTab">
+  <div class="grid">
+    <div class="stat"><small>Total Income</small><strong id="sIncome">৳0.00</strong></div>
+    <div class="stat"><small>Total Expense</small><strong id="sExpense">৳0.00</strong></div>
+    <div class="stat"><small>Receivable</small><strong id="sReceivable">৳0.00</strong></div>
+    <div class="stat"><small>Payable</small><strong id="sPayable">৳0.00</strong></div>
+  </div>
+  <div class="two">
+    <div class="card"><h3>Cash & Bank</h3><p>Cash: <b id="sCash">৳0.00</b></p><p>Bank: <b id="sBank">৳0.00</b></p><p>Net Balance: <b id="sBalance">৳0.00</b></p></div>
+    <div class="card"><h3>Quick Actions</h3><div class="actions"><button class="btn" onclick="openForm('income')">+ Income</button><button class="btn" onclick="openForm('expense')">+ Expense</button></div></div>
+  </div>
+</section>
+
+<section id="incomeTab" class="hidden">
+ <div class="card section"><h2>Income</h2><button class="btn" onclick="openForm('income')">+ Add Income</button></div>
+ <div id="incomeList"></div>
+</section>
+
+<section id="expenseTab" class="hidden">
+ <div class="card section"><h2>Expense</h2><button class="btn" onclick="openForm('expense')">+ Add Expense</button></div>
+ <div id="expenseList"></div>
+</section>
+
+<section id="receivablesTab" class="hidden">
+ <div class="card section"><h2>Receivable / পাওনা</h2><button class="btn" onclick="openForm('receivable')">+ Add Receivable</button></div>
+ <div id="receivableList"></div>
+</section>
+
+<section id="payablesTab" class="hidden">
+ <div class="card section"><h2>Payable / দেনা</h2><button class="btn" onclick="openForm('payable')">+ Add Payable</button></div>
+ <div id="payableList"></div>
+</section>
+
+<section id="transfersTab" class="hidden">
+ <div class="card section"><h2>Cash / Bank Transfer</h2><button class="btn" onclick="openForm('transfer')">+ Add Transfer</button></div>
+ <div id="transferList"></div>
+</section>
+</main>
+</div>
+
+<div id="modal" class="modal hidden">
+ <div class="card">
+   <h2 id="modalTitle"></h2>
+   <div id="formArea"></div>
+   <div class="actions" style="margin-top:15px"><button class="btn" onclick="saveForm()">Save</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>
+ </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://bbuywkywvbbibcqylndv.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_xnUfgsDBeNRuJePaf5NXhQ_ty56DXnc";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+let currentUser=null, formType=null;
+
+const toNumber = n => {
+  const v = Number(n);
+  return Number.isFinite(v) ? v : 0;
+};
+
+const money = n => "৳" + toNumber(n).toLocaleString("en-BD",{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc = s => String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const today = () => new Date().toISOString().slice(0,10);
+
+function showLogin(){loginBox.classList.remove("hidden");registerBox.classList.add("hidden");}
+function showRegister(){loginBox.classList.add("hidden");registerBox.classList.remove("hidden");}
+function message(id,text,type="error"){document.getElementById(id).innerHTML=`<div class="msg ${type}">${esc(text)}</div>`}
+
+async function register(){
+ const name=regName.value.trim(), email=regEmail.value.trim(), pass=regPassword.value, conf=regConfirm.value;
+ if(!name||!email||!pass)return message("registerMsg","Please fill all fields.");
+ if(pass.length<6)return message("registerMsg","Password must be at least 6 characters.");
+ if(pass!==conf)return message("registerMsg","Passwords do not match.");
+ const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name}}});
+ if(error)return message("registerMsg",error.message);
+ message("registerMsg","Account created. Check your email for verification, then login.","ok");
+}
+async function login(){
+ const email=loginEmail.value.trim(), pass=loginPassword.value;
+ if(!email||!pass)return message("loginMsg","Enter email and password.");
+ const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+ if(error)return message("loginMsg",error.message);
+ currentUser=data.user; showApp();
+}
+async function forgotPassword(){
+ const email=loginEmail.value.trim();
+ if(!email)return message("loginMsg","Enter your email first.");
+ const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href});
+ if(error)return message("loginMsg",error.message);
+ message("loginMsg","Password reset email sent. Check your inbox.","ok");
+}
+async function logout(){await sb.auth.signOut();showAuth();}
+function showAuth(){appScreen.classList.add("hidden");authScreen.classList.remove("hidden");}
+function showApp(){authScreen.classList.add("hidden");appScreen.classList.remove("hidden");userEmail.textContent=currentUser?.email||"";refresh();}
+function tab(name){
+ document.querySelectorAll("[id$='Tab']").forEach(x=>x.classList.add("hidden"));
+ document.getElementById(name+"Tab").classList.remove("hidden");
+ document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));
+ if(name!=="dashboard") refreshList(name);
+}
+function openForm(type){
+ formType=type; modal.classList.remove("hidden");
+ const title={income:"Add Income",expense:"Add Expense",receivable:"Add Receivable",payable:"Add Payable",transfer:"Add Transfer"}[type];
+ modalTitle.textContent=title;
+ let h="";
+ if(type==="income"||type==="expense"){
+  h=`<div class="form-grid">
+  <div class="field"><label>Date</label><input id="fDate" type="date" value="${today()}"></div>
+  <div class="field"><label>Amount</label><input id="fAmount" type="number" min="0.01" step="0.01"></div>
+  <div class="field"><label>Category</label><input id="fCategory"></div>
+  <div class="field"><label>Account</label><select id="fAccount"><option>Cash</option><option>Bank</option></select></div>
+  <div class="field"><label>${type==="income"?"From Person":"Paid To"}</label><input id="fPerson"></div>
+  <div class="field fullcol"><label>Note</label><textarea id="fNote"></textarea></div></div>`;
+ } else if(type==="receivable"||type==="payable"){
+  h=`<div class="form-grid"><div class="field"><label>Person</label><input id="fPerson"></div><div class="field"><label>Date</label><input id="fDate" type="date" value="${today()}"></div><div class="field"><label>Amount</label><input id="fAmount" type="number" min="0.01" step="0.01"></div><div class="field fullcol"><label>Description</label><textarea id="fNote"></textarea></div></div>`;
+ } else {
+  h=`<div class="form-grid"><div class="field"><label>Date</label><input id="fDate" type="date" value="${today()}"></div><div class="field"><label>Amount</label><input id="fAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label>From</label><select id="fFrom"><option>Cash</option><option>Bank</option></select></div><div class="field"><label>To</label><select id="fTo"><option>Bank</option><option>Cash</option></select></div><div class="field fullcol"><label>Note</label><textarea id="fNote"></textarea></div></div>`;
+ }
+ formArea.innerHTML=h;
+}
+function closeModal(){modal.classList.add("hidden");formType=null}
+async function saveForm(){
+ const amount=Number(document.getElementById("fAmount")?.value||0);
+ if(!amount||amount<=0)return alert("Enter a valid amount.");
+ let row={user_id:currentUser.id};
+ let table="";
+ if(formType==="income"){table="income";row={...row,entry_date:fDate.value,amount,category:fCategory.value||null,account:fAccount.value,from_person:fPerson.value||null,note:fNote.value||null}}
+ if(formType==="expense"){table="expense";row={...row,entry_date:fDate.value,amount,category:fCategory.value||null,account:fAccount.value,paid_to:fPerson.value||null,note:fNote.value||null}}
+ if(formType==="receivable"){table="receivables";row={...row,person:fPerson.value.trim(),entry_date:fDate.value,amount,description:fNote.value||null}}
+ if(formType==="payable"){table="payables";row={...row,person:fPerson.value.trim(),entry_date:fDate.value,amount,description:fNote.value||null}}
+ if(formType==="transfer"){table="transfers";row={...row,transfer_date:fDate.value,amount,from_account:fFrom.value,to_account:fTo.value,note:fNote.value||null}}
+ if(formType==="receivable"||formType==="payable"){if(!row.person)return alert("Enter person name.");}
+ if(formType==="transfer"&&row.from_account===row.to_account)return alert("From and To accounts must be different.");
+ const {error}=await sb.from(table).insert(row);
+ if(error)return alert(error.message);
+ closeModal();refresh();
+}
+async function removeRow(table,id){if(!confirm("Delete this entry?"))return;const {error}=await sb.from(table).delete().eq("id",id);if(error)alert(error.message);else refresh();}
+function tableHtml(rows,type){
+ if(!rows.length)return `<div class="card empty">No records yet.</div>`;
+ let head="",body="";
+ if(type==="income"||type==="expense"){
+  head="<tr><th>Date</th><th>Amount</th><th>Category</th><th>Account</th><th>Person</th><th>Action</th></tr>";
+  body=rows.map(r=>`<tr><td>${esc(r.entry_date)}</td><td>${money(r.amount)}</td><td>${esc(r.category||"")}</td><td>${esc(r.account)}</td><td>${esc(r.from_person||r.paid_to||"")}</td><td><button class="btn danger" onclick="removeRow('${type}', '${r.id}')">Delete</button></td></tr>`).join("");
+ }else if(type==="receivables"||type==="payables"){
+  head="<tr><th>Date</th><th>Person</th><th>Amount</th><th>Description</th><th>Action</th></tr>";
+  body=rows.map(r=>`<tr><td>${esc(r.entry_date)}</td><td>${esc(r.person)}</td><td>${money(r.amount)}</td><td>${esc(r.description||"")}</td><td><button class="btn danger" onclick="removeRow('${type}', '${r.id}')">Delete</button></td></tr>`).join("");
+ }else{
+  head="<tr><th>Date</th><th>Amount</th><th>From</th><th>To</th><th>Note</th><th>Action</th></tr>";
+  body=rows.map(r=>`<tr><td>${esc(r.transfer_date)}</td><td>${money(r.amount)}</td><td>${esc(r.from_account)}</td><td>${esc(r.to_account)}</td><td>${esc(r.note||"")}</td><td><button class="btn danger" onclick="removeRow('transfers', '${r.id}')">Delete</button></td></tr>`).join("");
+ }
+ return `<div class="table-wrap"><table class="table"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+}
+async function getRows(table){const {data,error}=await sb.from(table).select("*").order("created_at",{ascending:false});if(error){console.error(error);return []}return data||[]}
+async function refreshList(name){
+ const map={income:["income","incomeList"],expense:["expense","expenseList"],receivables:["receivables","receivableList"],payables:["payables","payableList"],transfers:["transfers","transferList"]};
+ if(!map[name])return;const [table,el]=map[name];const rows=await getRows(table);document.getElementById(el).innerHTML=tableHtml(rows,name);
+}
+async function refresh(){
+ const [inc,exp,rec,pay,tr]=await Promise.all([getRows("income"),getRows("expense"),getRows("receivables"),getRows("payables"),getRows("transfers")]);
+ const income=inc.reduce((a,r)=>a+toNumber(r.amount),0), expense=exp.reduce((a,r)=>a+toNumber(r.amount),0);
+const receivable=rec.reduce((a,r)=>a+toNumber(r.amount),0), payable=pay.reduce((a,r)=>a+toNumber(r.amount),0);
+ let cash=0,bank=0;
+ inc.forEach(r=>r.account==="Bank"?bank+=toNumber(r.amount):cash+=toNumber(r.amount));
+exp.forEach(r=>r.account==="Bank"?bank-=toNumber(r.amount):cash-=toNumber(r.amount));
+ tr.forEach(r=>{if(r.from_account==="Bank")bank-=toNumber(r.amount);else cash-=toNumber(r.amount);if(r.to_account==="Bank")bank+=toNumber(r.amount);else cash+=toNumber(r.amount)});
+ document.getElementById("sIncome").textContent=money(income);document.getElementById("sExpense").textContent=money(expense);
+ document.getElementById("sReceivable").textContent=money(receivable);document.getElementById("sPayable").textContent=money(payable);
+ document.getElementById("sCash").textContent=money(cash);document.getElementById("sBank").textContent=money(bank);document.getElementById("sBalance").textContent=money(cash+bank);
+ const visible=document.querySelector(".nav button.active")?.dataset.tab;if(visible&&visible!=="dashboard")refreshList(visible);
+}
+sb.auth.getSession().then(({data})=>{if(data.session){currentUser=data.session.user;showApp()}else showAuth()});
+sb.auth.onAuthStateChange((_event,session)=>{if(session){currentUser=session.user;showApp()}else showAuth()});
+</script>
+</body>
+</html>
