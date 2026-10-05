@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Money Manager</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14213d">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
@@ -244,6 +246,15 @@ exp.forEach(r=>r.account==="Bank"?bank-=toNumber(r.amount):cash-=toNumber(r.amou
 }
 sb.auth.getSession().then(({data})=>{if(data.session){currentUser=data.session.user;showApp()}else showAuth()});
 sb.auth.onAuthStateChange((_event,session)=>{if(session){currentUser=session.user;showApp()}else showAuth()});
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(() => console.log("Service Worker registered"))
+      .catch(error => console.error("Service Worker error:", error));
+  });
+}
 </script>
 </body>
 </html>
