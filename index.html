@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -23,32 +23,27 @@ header{background:#14213d;color:#fff}.top{max-width:1100px;margin:auto;padding:1
 .user{font-size:12px;opacity:.8}.nav{max-width:1100px;margin:auto;padding:0 20px 14px;display:flex;gap:8px;overflow:auto}.nav button{white-space:nowrap;border:0;background:#223354;color:#fff;padding:9px 12px;border-radius:9px}.nav button.active{background:#fff;color:#14213d}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:20px 0}.stat{padding:18px;border-radius:15px;background:white;box-shadow:0 4px 18px rgba(20,35,60,.06)}.stat small{color:#687386}.stat strong{display:block;font-size:22px;margin-top:8px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.section{margin-bottom:18px}
-.table-wrap{overflow:auto;background:white;border-radius:14px}.table{width:100%;border-collapse:collapse;min-width:650px}.table th,.table td{padding:11px;border-bottom:1px solid #edf0f5;text-align:left;font-size:13px}.table th{background:#f8faff}.actions{display:flex;gap:7px}
+.table-wrap{overflow:auto;background:white;border-radius:14px}.table{width:100%;border-collapse:collapse;min-width:650px}.table th,.table td{padding:11px;border-bottom:1px solid #edf0f5;text-align:left;font-size:13px}.table th{background:#f8faff}.actions{display:flex;gap:7px;flex-wrap:wrap}
 .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.fullcol{grid-column:1/-1}
 .empty{padding:30px;text-align:center;color:#788397}
-.modal{position:fixed;inset:0;background:rgba(10,20,40,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:5}.modal .card{width:100%;max-width:500px}
+.modal{position:fixed;inset:0;background:rgba(10,20,40,.5);display:flex;align-items:center;justify-content:center;padding:20px;z-index:5;overflow:auto}.modal .card{width:100%;max-width:500px;max-height:90vh;overflow:auto}
 @media(max-width:750px){.grid{grid-template-columns:repeat(2,1fr)}.two{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}.nav{padding-bottom:10px}.wrap{padding:14px}.stat strong{font-size:18px}}
 </style>
 </head>
 <body>
-
 <div id="authScreen" class="auth">
   <div class="card">
     <div class="brand"><h1>💰 My Money Manager</h1><p>Simple personal money management</p></div>
-
     <div id="loginBox">
-      <h2>Login</h2>
-      <div id="loginMsg"></div>
+      <h2>Login</h2><div id="loginMsg"></div>
       <div class="field"><label>Email</label><input id="loginEmail" type="email" autocomplete="email"></div>
       <div class="field"><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password"></div>
       <button class="btn full" onclick="login()">Login</button>
       <div class="link" onclick="showRegister()">Create Account</div>
       <div class="link" onclick="forgotPassword()">Forgot Password?</div>
     </div>
-
     <div id="registerBox" class="hidden">
-      <h2>Create Account</h2>
-      <div id="registerMsg"></div>
+      <h2>Create Account</h2><div id="registerMsg"></div>
       <div class="field"><label>Name</label><input id="regName" type="text"></div>
       <div class="field"><label>Email</label><input id="regEmail" type="email" autocomplete="email"></div>
       <div class="field"><label>Password</label><input id="regPassword" type="password" autocomplete="new-password"></div>
@@ -67,56 +62,42 @@ header{background:#14213d;color:#fff}.top{max-width:1100px;margin:auto;padding:1
     <button data-tab="income" onclick="tab('income')">Income</button>
     <button data-tab="expense" onclick="tab('expense')">Expense</button>
     <button data-tab="receivables" onclick="tab('receivables')">Receivable</button>
+    <button data-tab="receivablePayments" onclick="tab('receivablePayments')">Receivable Payment</button>
     <button data-tab="payables" onclick="tab('payables')">Payable</button>
+    <button data-tab="payablePayments" onclick="tab('payablePayments')">Payable Payment</button>
     <button data-tab="transfers" onclick="tab('transfers')">Transfers</button>
   </div>
 </header>
-
 <main class="wrap">
 <section id="dashboardTab">
   <div class="grid">
     <div class="stat"><small>Total Income</small><strong id="sIncome">৳0.00</strong></div>
     <div class="stat"><small>Total Expense</small><strong id="sExpense">৳0.00</strong></div>
-    <div class="stat"><small>Receivable</small><strong id="sReceivable">৳0.00</strong></div>
-    <div class="stat"><small>Payable</small><strong id="sPayable">৳0.00</strong></div>
+    <div class="stat"><small>Receivable Remaining</small><strong id="sReceivable">৳0.00</strong></div>
+    <div class="stat"><small>Payable Remaining</small><strong id="sPayable">৳0.00</strong></div>
   </div>
   <div class="two">
     <div class="card"><h3>Cash & Bank</h3><p>Cash: <b id="sCash">৳0.00</b></p><p>Bank: <b id="sBank">৳0.00</b></p><p>Net Balance: <b id="sBalance">৳0.00</b></p></div>
-    <div class="card"><h3>Quick Actions</h3><div class="actions"><button class="btn" onclick="openForm('income')">+ Income</button><button class="btn" onclick="openForm('expense')">+ Expense</button></div></div>
+    <div class="card"><h3>Quick Actions</h3><div class="actions">
+      <button class="btn" onclick="openForm('income')">+ Income</button>
+      <button class="btn" onclick="openForm('expense')">+ Expense</button>
+      <button class="btn" onclick="openForm('receivablePayment')">+ Receivable Payment</button>
+      <button class="btn" onclick="openForm('payablePayment')">+ Payable Payment</button>
+    </div></div>
   </div>
 </section>
-
-<section id="incomeTab" class="hidden">
- <div class="card section"><h2>Income</h2><button class="btn" onclick="openForm('income')">+ Add Income</button></div>
- <div id="incomeList"></div>
-</section>
-
-<section id="expenseTab" class="hidden">
- <div class="card section"><h2>Expense</h2><button class="btn" onclick="openForm('expense')">+ Add Expense</button></div>
- <div id="expenseList"></div>
-</section>
-
-<section id="receivablesTab" class="hidden">
- <div class="card section"><h2>Receivable / পাওনা</h2><button class="btn" onclick="openForm('receivable')">+ Add Receivable</button></div>
- <div id="receivableList"></div>
-</section>
-
-<section id="payablesTab" class="hidden">
- <div class="card section"><h2>Payable / দেনা</h2><button class="btn" onclick="openForm('payable')">+ Add Payable</button></div>
- <div id="payableList"></div>
-</section>
-
-<section id="transfersTab" class="hidden">
- <div class="card section"><h2>Cash / Bank Transfer</h2><button class="btn" onclick="openForm('transfer')">+ Add Transfer</button></div>
- <div id="transferList"></div>
-</section>
+<section id="incomeTab" class="hidden"><div class="card section"><h2>Income</h2><button class="btn" onclick="openForm('income')">+ Add Income</button></div><div id="incomeList"></div></section>
+<section id="expenseTab" class="hidden"><div class="card section"><h2>Expense</h2><button class="btn" onclick="openForm('expense')">+ Add Expense</button></div><div id="expenseList"></div></section>
+<section id="receivablesTab" class="hidden"><div class="card section"><h2>Receivable / পাওনা</h2><button class="btn" onclick="openForm('receivable')">+ Add Receivable</button></div><div id="receivableList"></div></section>
+<section id="receivablePaymentsTab" class="hidden"><div class="card section"><h2>Receivable Payment / পাওনা আদায়</h2><p>Record full or partial payments received against a receivable.</p><button class="btn" onclick="openForm('receivablePayment')">+ Add Receivable Payment</button></div><div id="receivablePaymentsList"></div></section>
+<section id="payablesTab" class="hidden"><div class="card section"><h2>Payable / দেনা</h2><button class="btn" onclick="openForm('payable')">+ Add Payable</button></div><div id="payableList"></div></section>
+<section id="payablePaymentsTab" class="hidden"><div class="card section"><h2>Payable Payment / দেনা পরিশোধ</h2><p>Record full or partial payments made against a payable.</p><button class="btn" onclick="openForm('payablePayment')">+ Add Payable Payment</button></div><div id="payablePaymentsList"></div></section>
+<section id="transfersTab" class="hidden"><div class="card section"><h2>Cash / Bank Transfer</h2><button class="btn" onclick="openForm('transfer')">+ Add Transfer</button></div><div id="transferList"></div></section>
 </main>
 </div>
 
 <div id="modal" class="modal hidden">
- <div class="card">
-   <h2 id="modalTitle"></h2>
-   <div id="formArea"></div>
+ <div class="card"><h2 id="modalTitle"></h2><div id="formArea"></div>
    <div class="actions" style="margin-top:15px"><button class="btn" onclick="saveForm()">Save</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>
  </div>
 </div>
@@ -127,56 +108,62 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_xnUfgsDBeNRuJePaf5NXhQ_ty56DXnc
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 let currentUser=null, formType=null;
-
-const toNumber = n => {
-  const v = Number(n);
-  return Number.isFinite(v) ? v : 0;
-};
-
-const money = n => "৳" + toNumber(n).toLocaleString("en-BD",{minimumFractionDigits:2,maximumFractionDigits:2});
+const toNumber = n => { const v=Number(n); return Number.isFinite(v)?v:0; };
+const money = n => "৳"+toNumber(n).toLocaleString("en-BD",{minimumFractionDigits:2,maximumFractionDigits:2});
 const esc = s => String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 const today = () => new Date().toISOString().slice(0,10);
+const el = id => document.getElementById(id);
 
-function showLogin(){loginBox.classList.remove("hidden");registerBox.classList.add("hidden");}
-function showRegister(){loginBox.classList.add("hidden");registerBox.classList.remove("hidden");}
-function message(id,text,type="error"){document.getElementById(id).innerHTML=`<div class="msg ${type}">${esc(text)}</div>`}
+function showLogin(){el("loginBox").classList.remove("hidden");el("registerBox").classList.add("hidden");}
+function showRegister(){el("loginBox").classList.add("hidden");el("registerBox").classList.remove("hidden");}
+function message(id,text,type="error"){el(id).innerHTML=`<div class="msg ${type}">${esc(text)}</div>`}
 
 async function register(){
- const name=regName.value.trim(), email=regEmail.value.trim(), pass=regPassword.value, conf=regConfirm.value;
+ const name=el("regName").value.trim(), email=el("regEmail").value.trim(), pass=el("regPassword").value, conf=el("regConfirm").value;
  if(!name||!email||!pass)return message("registerMsg","Please fill all fields.");
  if(pass.length<6)return message("registerMsg","Password must be at least 6 characters.");
  if(pass!==conf)return message("registerMsg","Passwords do not match.");
- const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name}}});
+ const {error}=await sb.auth.signUp({email,password:pass,options:{data:{name}}});
  if(error)return message("registerMsg",error.message);
  message("registerMsg","Account created. Check your email for verification, then login.","ok");
 }
 async function login(){
- const email=loginEmail.value.trim(), pass=loginPassword.value;
+ const email=el("loginEmail").value.trim(), pass=el("loginPassword").value;
  if(!email||!pass)return message("loginMsg","Enter email and password.");
  const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
  if(error)return message("loginMsg",error.message);
- currentUser=data.user; showApp();
+ currentUser=data.user;showApp();
 }
 async function forgotPassword(){
- const email=loginEmail.value.trim();
+ const email=el("loginEmail").value.trim();
  if(!email)return message("loginMsg","Enter your email first.");
  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href});
  if(error)return message("loginMsg",error.message);
  message("loginMsg","Password reset email sent. Check your inbox.","ok");
 }
 async function logout(){await sb.auth.signOut();showAuth();}
-function showAuth(){appScreen.classList.add("hidden");authScreen.classList.remove("hidden");}
-function showApp(){authScreen.classList.add("hidden");appScreen.classList.remove("hidden");userEmail.textContent=currentUser?.email||"";refresh();}
+function showAuth(){el("appScreen").classList.add("hidden");el("authScreen").classList.remove("hidden");}
+function showApp(){el("authScreen").classList.add("hidden");el("appScreen").classList.remove("hidden");el("userEmail").textContent=currentUser?.email||"";refresh();}
 function tab(name){
- document.querySelectorAll("[id$='Tab']").forEach(x=>x.classList.add("hidden"));
- document.getElementById(name+"Tab").classList.remove("hidden");
+ document.querySelectorAll("main section").forEach(x=>x.classList.add("hidden"));
+ el(name+"Tab").classList.remove("hidden");
  document.querySelectorAll(".nav button").forEach(x=>x.classList.toggle("active",x.dataset.tab===name));
- if(name!=="dashboard") refreshList(name);
+ if(name!=="dashboard")refreshList(name);
 }
-function openForm(type){
- formType=type; modal.classList.remove("hidden");
- const title={income:"Add Income",expense:"Add Expense",receivable:"Add Receivable",payable:"Add Payable",transfer:"Add Transfer"}[type];
- modalTitle.textContent=title;
+async function getRows(table){
+ const {data,error}=await sb.from(table).select("*").order("created_at",{ascending:false});
+ if(error){console.error("Read "+table+" failed:",error.message);return []}
+ return data||[];
+}
+async function getPayments(table,foreignKey){
+ const {data,error}=await sb.from(table).select("*");
+ if(error){console.error("Read "+table+" failed:",error.message);return []}
+ return (data||[]).map(r=>({...r,[foreignKey]:r[foreignKey]}));
+}
+async function openForm(type){
+ formType=type;el("modal").classList.remove("hidden");
+ const titles={income:"Add Income",expense:"Add Expense",receivable:"Add Receivable",payable:"Add Payable",transfer:"Add Transfer",receivablePayment:"Add Receivable Payment",payablePayment:"Add Payable Payment"};
+ el("modalTitle").textContent=titles[type]||"Add Entry";
  let h="";
  if(type==="income"||type==="expense"){
   h=`<div class="form-grid">
@@ -186,63 +173,136 @@ function openForm(type){
   <div class="field"><label>Account</label><select id="fAccount"><option>Cash</option><option>Bank</option></select></div>
   <div class="field"><label>${type==="income"?"From Person":"Paid To"}</label><input id="fPerson"></div>
   <div class="field fullcol"><label>Note</label><textarea id="fNote"></textarea></div></div>`;
- } else if(type==="receivable"||type==="payable"){
+ }else if(type==="receivable"||type==="payable"){
   h=`<div class="form-grid"><div class="field"><label>Person</label><input id="fPerson"></div><div class="field"><label>Date</label><input id="fDate" type="date" value="${today()}"></div><div class="field"><label>Amount</label><input id="fAmount" type="number" min="0.01" step="0.01"></div><div class="field fullcol"><label>Description</label><textarea id="fNote"></textarea></div></div>`;
- } else {
+ }else if(type==="receivablePayment"||type==="payablePayment"){
+  const isRec=type==="receivablePayment";
+  const baseTable=isRec?"receivables":"payables";
+  const paymentTable=isRec?"receivable_payments":"payable_payments";
+  const foreignKey=isRec?"receivable_id":"payable_id";
+  const [bases,payments]=await Promise.all([getRows(baseTable),getPayments(paymentTable,foreignKey)]);
+  const paidById={};
+  payments.forEach(p=>paidById[p[foreignKey]]=(paidById[p[foreignKey]]||0)+toNumber(p.amount));
+  const outstanding=bases.map(r=>({...r,remaining:toNumber(r.amount)-(paidById[r.id]||0)})).filter(r=>r.remaining>0.009);
+  const options=outstanding.map(r=>`<option value="${esc(r.id)}">${esc(r.person||"Unnamed")} — Remaining ${money(r.remaining)} (Total ${money(r.amount)})</option>`).join("");
+  h=`<div class="form-grid">
+    <div class="field fullcol"><label>${isRec?"Receivable / Person":"Payable / Person"}</label><select id="fLinkedId" required><option value="">Select ${isRec?"receivable":"payable"}</option>${options}</select></div>
+    <div class="field"><label>Payment Date</label><input id="fDate" type="date" value="${today()}"></div>
+    <div class="field"><label>Amount</label><input id="fAmount" type="number" min="0.01" step="0.01" required></div>
+    <div class="field"><label>Account</label><select id="fAccount"><option>Cash</option><option>Bank</option></select></div>
+    <div class="field fullcol"><label>Note</label><textarea id="fNote"></textarea></div>
+    ${outstanding.length?"":`<div class="field fullcol"><div class="msg error">There are no outstanding ${isRec?"receivables":"payables"} available for payment.</div></div>`}
+  </div>`;
+ }else{
   h=`<div class="form-grid"><div class="field"><label>Date</label><input id="fDate" type="date" value="${today()}"></div><div class="field"><label>Amount</label><input id="fAmount" type="number" min="0.01" step="0.01"></div><div class="field"><label>From</label><select id="fFrom"><option>Cash</option><option>Bank</option></select></div><div class="field"><label>To</label><select id="fTo"><option>Bank</option><option>Cash</option></select></div><div class="field fullcol"><label>Note</label><textarea id="fNote"></textarea></div></div>`;
  }
- formArea.innerHTML=h;
+ el("formArea").innerHTML=h;
 }
-function closeModal(){modal.classList.add("hidden");formType=null}
+function closeModal(){el("modal").classList.add("hidden");formType=null}
 async function saveForm(){
- const amount=Number(document.getElementById("fAmount")?.value||0);
- if(!amount||amount<=0)return alert("Enter a valid amount.");
- let row={user_id:currentUser.id};
- let table="";
- if(formType==="income"){table="income";row={...row,entry_date:fDate.value,amount,category:fCategory.value||null,account:fAccount.value,from_person:fPerson.value||null,note:fNote.value||null}}
- if(formType==="expense"){table="expense";row={...row,entry_date:fDate.value,amount,category:fCategory.value||null,account:fAccount.value,paid_to:fPerson.value||null,note:fNote.value||null}}
- if(formType==="receivable"){table="receivables";row={...row,person:fPerson.value.trim(),entry_date:fDate.value,amount,description:fNote.value||null}}
- if(formType==="payable"){table="payables";row={...row,person:fPerson.value.trim(),entry_date:fDate.value,amount,description:fNote.value||null}}
- if(formType==="transfer"){table="transfers";row={...row,transfer_date:fDate.value,amount,from_account:fFrom.value,to_account:fTo.value,note:fNote.value||null}}
- if(formType==="receivable"||formType==="payable"){if(!row.person)return alert("Enter person name.");}
+ if(!currentUser)return alert("Please log in again.");
+ const amount=Number(el("fAmount")?.value||0);
+ if(!Number.isFinite(amount)||amount<=0)return alert("Enter a valid amount.");
+ let row={user_id:currentUser.id},table="";
+ const val=id=>el(id)?.value;
+ if(formType==="income"){table="income";row={...row,entry_date:val("fDate"),amount,category:val("fCategory")||null,account:val("fAccount"),from_person:val("fPerson")||null,note:val("fNote")||null}}
+ if(formType==="expense"){table="expense";row={...row,entry_date:val("fDate"),amount,category:val("fCategory")||null,account:val("fAccount"),paid_to:val("fPerson")||null,note:val("fNote")||null}}
+ if(formType==="receivable"){table="receivables";row={...row,person:val("fPerson").trim(),entry_date:val("fDate"),amount,description:val("fNote")||null}}
+ if(formType==="payable"){table="payables";row={...row,person:val("fPerson").trim(),entry_date:val("fDate"),amount,description:val("fNote")||null}}
+ if(formType==="transfer"){table="transfers";row={...row,transfer_date:val("fDate"),amount,from_account:val("fFrom"),to_account:val("fTo"),note:val("fNote")||null}}
+ if(formType==="receivablePayment"||formType==="payablePayment"){
+  const isRec=formType==="receivablePayment";
+  const baseTable=isRec?"receivables":"payables";
+  table=isRec?"receivable_payments":"payable_payments";
+  const foreignKey=isRec?"receivable_id":"payable_id";
+  const linkedId=val("fLinkedId");
+  if(!linkedId)return alert("Select a receivable/payable first.");
+  const [baseResult,payResult]=await Promise.all([
+    sb.from(baseTable).select("*").eq("id",linkedId).eq("user_id",currentUser.id).maybeSingle(),
+    sb.from(table).select("amount").eq(foreignKey,linkedId)
+  ]);
+  if(baseResult.error)return alert(baseResult.error.message);
+  if(!baseResult.data)return alert("Selected record not found or you do not have access.");
+  if(payResult.error)return alert(payResult.error.message);
+  const alreadyPaid=(payResult.data||[]).reduce((sum,p)=>sum+toNumber(p.amount),0);
+  const remaining=toNumber(baseResult.data.amount)-alreadyPaid;
+  if(amount>remaining+0.00001)return alert("Payment is greater than the remaining balance ("+money(remaining)+").");
+  row={...row,[foreignKey]:linkedId,payment_date:val("fDate"),amount,account:val("fAccount"),note:val("fNote")||null};
+ }
+ if((formType==="receivable"||formType==="payable")&&!row.person)return alert("Enter person name.");
  if(formType==="transfer"&&row.from_account===row.to_account)return alert("From and To accounts must be different.");
  const {error}=await sb.from(table).insert(row);
- if(error)return alert(error.message);
- closeModal();refresh();
+ if(error)return alert("Could not save: "+error.message);
+ closeModal();await refresh();
 }
-async function removeRow(table,id){if(!confirm("Delete this entry?"))return;const {error}=await sb.from(table).delete().eq("id",id);if(error)alert(error.message);else refresh();}
+async function removeRow(table,id){
+ if(!confirm("Delete this entry?"))return;
+ const {error}=await sb.from(table).delete().eq("id",id);
+ if(error)alert(error.message);else await refresh();
+}
 function tableHtml(rows,type){
  if(!rows.length)return `<div class="card empty">No records yet.</div>`;
  let head="",body="";
  if(type==="income"||type==="expense"){
   head="<tr><th>Date</th><th>Amount</th><th>Category</th><th>Account</th><th>Person</th><th>Action</th></tr>";
-  body=rows.map(r=>`<tr><td>${esc(r.entry_date)}</td><td>${money(r.amount)}</td><td>${esc(r.category||"")}</td><td>${esc(r.account)}</td><td>${esc(r.from_person||r.paid_to||"")}</td><td><button class="btn danger" onclick="removeRow('${type}', '${r.id}')">Delete</button></td></tr>`).join("");
+  body=rows.map(r=>`<tr><td>${esc(r.entry_date)}</td><td>${money(r.amount)}</td><td>${esc(r.category||"")}</td><td>${esc(r.account)}</td><td>${esc(r.from_person||r.paid_to||"")}</td><td><button class="btn danger" onclick="removeRow('${type}','${esc(r.id)}')">Delete</button></td></tr>`).join("");
  }else if(type==="receivables"||type==="payables"){
-  head="<tr><th>Date</th><th>Person</th><th>Amount</th><th>Description</th><th>Action</th></tr>";
-  body=rows.map(r=>`<tr><td>${esc(r.entry_date)}</td><td>${esc(r.person)}</td><td>${money(r.amount)}</td><td>${esc(r.description||"")}</td><td><button class="btn danger" onclick="removeRow('${type}', '${r.id}')">Delete</button></td></tr>`).join("");
+  head="<tr><th>Date</th><th>Person</th><th>Original Amount</th><th>Paid</th><th>Remaining</th><th>Description</th><th>Action</th></tr>";
+  body=rows.map(r=>`<tr><td>${esc(r.entry_date)}</td><td>${esc(r.person)}</td><td>${money(r.amount)}</td><td>${money(r.paid||0)}</td><td><b>${money(toNumber(r.amount)-toNumber(r.paid))}</b></td><td>${esc(r.description||"")}</td><td><button class="btn danger" onclick="removeRow('${type}','${esc(r.id)}')">Delete</button></td></tr>`).join("");
+ }else if(type==="receivablePayments"||type==="payablePayments"){
+  head="<tr><th>Payment Date</th><th>Person</th><th>Amount</th><th>Account</th><th>Note</th><th>Action</th></tr>";
+  const table=type==="receivablePayments"?"receivable_payments":"payable_payments";
+  body=rows.map(r=>`<tr><td>${esc(r.payment_date)}</td><td>${esc(r.person||"")}</td><td>${money(r.amount)}</td><td>${esc(r.account||"")}</td><td>${esc(r.note||"")}</td><td><button class="btn danger" onclick="removeRow('${table}','${esc(r.id)}')">Delete</button></td></tr>`).join("");
  }else{
   head="<tr><th>Date</th><th>Amount</th><th>From</th><th>To</th><th>Note</th><th>Action</th></tr>";
-  body=rows.map(r=>`<tr><td>${esc(r.transfer_date)}</td><td>${money(r.amount)}</td><td>${esc(r.from_account)}</td><td>${esc(r.to_account)}</td><td>${esc(r.note||"")}</td><td><button class="btn danger" onclick="removeRow('transfers', '${r.id}')">Delete</button></td></tr>`).join("");
+  body=rows.map(r=>`<tr><td>${esc(r.transfer_date)}</td><td>${money(r.amount)}</td><td>${esc(r.from_account)}</td><td>${esc(r.to_account)}</td><td>${esc(r.note||"")}</td><td><button class="btn danger" onclick="removeRow('transfers','${esc(r.id)}')">Delete</button></td></tr>`).join("");
  }
  return `<div class="table-wrap"><table class="table"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
 }
-async function getRows(table){const {data,error}=await sb.from(table).select("*").order("created_at",{ascending:false});if(error){console.error(error);return []}return data||[]}
 async function refreshList(name){
- const map={income:["income","incomeList"],expense:["expense","expenseList"],receivables:["receivables","receivableList"],payables:["payables","payableList"],transfers:["transfers","transferList"]};
- if(!map[name])return;const [table,el]=map[name];const rows=await getRows(table);document.getElementById(el).innerHTML=tableHtml(rows,name);
+ const map={
+  income:["income","incomeList"],expense:["expense","expenseList"],
+  receivables:["receivables","receivableList"],payables:["payables","payableList"],
+  transfers:["transfers","transferList"],receivablePayments:["receivable_payments","receivablePaymentsList"],
+  payablePayments:["payable_payments","payablePaymentsList"]
+ };
+ if(!map[name])return;
+ const [table,container]=map[name];
+ let rows=await getRows(table);
+ if(name==="receivables"||name==="payables"){
+  const isRec=name==="receivables", paymentTable=isRec?"receivable_payments":"payable_payments", fk=isRec?"receivable_id":"payable_id";
+  const payments=await getPayments(paymentTable,fk), paidById={};
+  payments.forEach(p=>paidById[p[fk]]=(paidById[p[fk]]||0)+toNumber(p.amount));
+  rows=rows.map(r=>({...r,paid:paidById[r.id]||0}));
+ }
+ if(name==="receivablePayments"||name==="payablePayments"){
+  const isRec=name==="receivablePayments", baseTable=isRec?"receivables":"payables", fk=isRec?"receivable_id":"payable_id";
+  const bases=await getRows(baseTable), byId=Object.fromEntries(bases.map(r=>[String(r.id),r.person||""]));
+  rows=rows.map(r=>({...r,person:byId[String(r[fk])]||"Related record unavailable"}));
+ }
+ el(container).innerHTML=tableHtml(rows,name);
 }
 async function refresh(){
- const [inc,exp,rec,pay,tr]=await Promise.all([getRows("income"),getRows("expense"),getRows("receivables"),getRows("payables"),getRows("transfers")]);
- const income=inc.reduce((a,r)=>a+toNumber(r.amount),0), expense=exp.reduce((a,r)=>a+toNumber(r.amount),0);
-const receivable=rec.reduce((a,r)=>a+toNumber(r.amount),0), payable=pay.reduce((a,r)=>a+toNumber(r.amount),0);
+ if(!currentUser)return;
+ const [inc,exp,rec,pay,tr,recPays,payPays]=await Promise.all([
+  getRows("income"),getRows("expense"),getRows("receivables"),getRows("payables"),getRows("transfers"),
+  getPayments("receivable_payments","receivable_id"),getPayments("payable_payments","payable_id")
+ ]);
+ const income=inc.reduce((a,r)=>a+toNumber(r.amount),0),expense=exp.reduce((a,r)=>a+toNumber(r.amount),0);
+ const recPaid=recPays.reduce((a,r)=>a+toNumber(r.amount),0),payPaid=payPays.reduce((a,r)=>a+toNumber(r.amount),0);
+ const receivable=rec.reduce((a,r)=>a+toNumber(r.amount),0)-recPaid;
+ const payable=pay.reduce((a,r)=>a+toNumber(r.amount),0)-payPaid;
  let cash=0,bank=0;
  inc.forEach(r=>r.account==="Bank"?bank+=toNumber(r.amount):cash+=toNumber(r.amount));
-exp.forEach(r=>r.account==="Bank"?bank-=toNumber(r.amount):cash-=toNumber(r.amount));
+ exp.forEach(r=>r.account==="Bank"?bank-=toNumber(r.amount):cash-=toNumber(r.amount));
+ recPays.forEach(r=>r.account==="Bank"?bank+=toNumber(r.amount):cash+=toNumber(r.amount));
+ payPays.forEach(r=>r.account==="Bank"?bank-=toNumber(r.amount):cash-=toNumber(r.amount));
  tr.forEach(r=>{if(r.from_account==="Bank")bank-=toNumber(r.amount);else cash-=toNumber(r.amount);if(r.to_account==="Bank")bank+=toNumber(r.amount);else cash+=toNumber(r.amount)});
- document.getElementById("sIncome").textContent=money(income);document.getElementById("sExpense").textContent=money(expense);
- document.getElementById("sReceivable").textContent=money(receivable);document.getElementById("sPayable").textContent=money(payable);
- document.getElementById("sCash").textContent=money(cash);document.getElementById("sBank").textContent=money(bank);document.getElementById("sBalance").textContent=money(cash+bank);
- const visible=document.querySelector(".nav button.active")?.dataset.tab;if(visible&&visible!=="dashboard")refreshList(visible);
+ el("sIncome").textContent=money(income);el("sExpense").textContent=money(expense);
+ el("sReceivable").textContent=money(receivable);el("sPayable").textContent=money(payable);
+ el("sCash").textContent=money(cash);el("sBank").textContent=money(bank);el("sBalance").textContent=money(cash+bank);
+ const visible=document.querySelector(".nav button.active")?.dataset.tab;
+ if(visible&&visible!=="dashboard")await refreshList(visible);
 }
 sb.auth.getSession().then(({data})=>{if(data.session){currentUser=data.session.user;showApp()}else showAuth()});
 sb.auth.onAuthStateChange((_event,session)=>{if(session){currentUser=session.user;showApp()}else showAuth()});
