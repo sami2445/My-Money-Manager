@@ -66,6 +66,7 @@ header{background:#14213d;color:#fff}.top{max-width:1100px;margin:auto;padding:1
     <button data-tab="payables" onclick="tab('payables')">Payable</button>
     <button data-tab="payablePayments" onclick="tab('payablePayments')">Payable Payment</button>
     <button data-tab="transfers" onclick="tab('transfers')">Transfers</button>
+    <button data-tab="transactions" onclick="tab('transactions')">Transaction History</button>
   </div>
 </header>
 <main class="wrap">
@@ -93,6 +94,21 @@ header{background:#14213d;color:#fff}.top{max-width:1100px;margin:auto;padding:1
 <section id="payablesTab" class="hidden"><div class="card section"><h2>Payable / দেনা</h2><button class="btn" onclick="openForm('payable')">+ Add Payable</button></div><div id="payableList"></div></section>
 <section id="payablePaymentsTab" class="hidden"><div class="card section"><h2>Payable Payment / দেনা পরিশোধ</h2><p>Record full or partial payments made against a payable.</p><button class="btn" onclick="openForm('payablePayment')">+ Add Payable Payment</button></div><div id="payablePaymentsList"></div></section>
 <section id="transfersTab" class="hidden"><div class="card section"><h2>Cash / Bank Transfer</h2><button class="btn" onclick="openForm('transfer')">+ Add Transfer</button></div><div id="transferList"></div></section>
+<section id="transactionsTab" class="hidden">
+  <div class="card section">
+    <h2>Transaction History / সকল লেনদেন</h2>
+    <p>Income, expense, payments, transfers এবং পাওনা/দেনা তৈরি—সব এক জায়গায় দেখুন।</p>
+    <div class="form-grid">
+      <div class="field"><label>Transaction Type</label><select id="txType" onchange="renderTransactionHistory()"><option value="all">All Types</option><option value="Income">Income</option><option value="Expense">Expense</option><option value="Receivable Payment">Receivable Payment</option><option value="Payable Payment">Payable Payment</option><option value="Transfer">Transfer</option><option value="Receivable Created">Receivable Created</option><option value="Payable Created">Payable Created</option></select></div>
+      <div class="field"><label>Search</label><input id="txSearch" type="search" placeholder="Name, account, note..." oninput="renderTransactionHistory()"></div>
+      <div class="field"><label>From Date</label><input id="txFrom" type="date" onchange="renderTransactionHistory()"></div>
+      <div class="field"><label>To Date</label><input id="txTo" type="date" onchange="renderTransactionHistory()"></div>
+    </div>
+    <div class="actions"><button class="btn secondary" onclick="clearTransactionFilters()">Clear Filters</button><button class="btn secondary" onclick="loadTransactionHistory()">Refresh</button></div>
+    <p id="txSummary" style="margin-bottom:0;color:#687386"></p>
+  </div>
+  <div id="transactionHistoryList"></div>
+</section>
 </main>
 </div>
 
@@ -259,7 +275,41 @@ function tableHtml(rows,type){
  }
  return `<div class="table-wrap"><table class="table"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
 }
+let transactionHistoryRows=[];
+function clearTransactionFilters(){
+ el("txType").value="all";el("txSearch").value="";el("txFrom").value="";el("txTo").value="";renderTransactionHistory();
+}
+async function loadTransactionHistory(){
+ if(!currentUser)return;
+ const [inc,exp,recPays,payPays,tr,rec,pay]=await Promise.all([
+  getRows("income"),getRows("expense"),getPayments("receivable_payments","receivable_id"),
+  getPayments("payable_payments","payable_id"),getRows("transfers"),getRows("receivables"),getRows("payables")
+ ]);
+ const recById=Object.fromEntries(rec.map(r=>[String(r.id),r]));
+ const payById=Object.fromEntries(pay.map(r=>[String(r.id),r]));
+ transactionHistoryRows=[];
+ inc.forEach(r=>transactionHistoryRows.push({date:r.entry_date||r.created_at,type:"Income",detail:r.from_person||r.category||"Income",account:r.account||"",note:r.note||r.category||"",amount:toNumber(r.amount),sort:r.created_at||r.entry_date}));
+ exp.forEach(r=>transactionHistoryRows.push({date:r.entry_date||r.created_at,type:"Expense",detail:r.paid_to||r.category||"Expense",account:r.account||"",note:r.note||r.category||"",amount:toNumber(r.amount),sort:r.created_at||r.entry_date}));
+ recPays.forEach(r=>{const base=recById[String(r.receivable_id)];transactionHistoryRows.push({date:r.payment_date||r.created_at,type:"Receivable Payment",detail:base?.person||"Receivable",account:r.account||"",note:r.note||"",amount:toNumber(r.amount),sort:r.created_at||r.payment_date})});
+ payPays.forEach(r=>{const base=payById[String(r.payable_id)];transactionHistoryRows.push({date:r.payment_date||r.created_at,type:"Payable Payment",detail:base?.person||"Payable",account:r.account||"",note:r.note||"",amount:toNumber(r.amount),sort:r.created_at||r.payment_date})});
+ tr.forEach(r=>transactionHistoryRows.push({date:r.transfer_date||r.created_at,type:"Transfer",detail:`${r.from_account||""} → ${r.to_account||""}`,account:`${r.from_account||""} → ${r.to_account||""}`,note:r.note||"",amount:toNumber(r.amount),sort:r.created_at||r.transfer_date}));
+ rec.forEach(r=>transactionHistoryRows.push({date:r.entry_date||r.created_at,type:"Receivable Created",detail:r.person||"",account:"—",note:r.description||"",amount:toNumber(r.amount),sort:r.created_at||r.entry_date}));
+ pay.forEach(r=>transactionHistoryRows.push({date:r.entry_date||r.created_at,type:"Payable Created",detail:r.person||"",account:"—",note:r.description||"",amount:toNumber(r.amount),sort:r.created_at||r.entry_date}));
+ transactionHistoryRows.sort((a,b)=>String(b.date||b.sort||"").localeCompare(String(a.date||a.sort||"")));
+ renderTransactionHistory();
+}
+function renderTransactionHistory(){
+ const target=el("transactionHistoryList");if(!target)return;
+ const type=el("txType")?.value||"all",q=(el("txSearch")?.value||"").trim().toLowerCase(),from=el("txFrom")?.value||"",to=el("txTo")?.value||"";
+ const rows=transactionHistoryRows.filter(r=>(type==="all"||r.type===type)&&(!from||String(r.date||"").slice(0,10)>=from)&&(!to||String(r.date||"").slice(0,10)<=to)&&(!q||[r.type,r.detail,r.account,r.note,r.date].some(v=>String(v??"").toLowerCase().includes(q))));
+ const total=rows.reduce((sum,r)=>sum+r.amount,0);
+ el("txSummary").textContent=`Showing ${rows.length} of ${transactionHistoryRows.length} records · Listed amounts total ${money(total)} (transfers and receivable/payable entries are included, so this is not cash balance).`;
+ if(!rows.length){target.innerHTML='<div class="card empty">No transactions match these filters.</div>';return;}
+ const body=rows.map(r=>`<tr><td>${esc(String(r.date||"").slice(0,10))}</td><td>${esc(r.type)}</td><td>${esc(r.detail||"")}</td><td>${esc(r.account||"")}</td><td>${esc(r.note||"")}</td><td><b>${money(r.amount)}</b></td></tr>`).join("");
+ target.innerHTML=`<div class="table-wrap"><table class="table"><thead><tr><th>Date</th><th>Type</th><th>Person / Details</th><th>Account</th><th>Note</th><th>Amount</th></tr></thead><tbody>${body}</tbody></table></div>`;
+}
 async function refreshList(name){
+ if(name==="transactions"){await loadTransactionHistory();return;}
  const map={
   income:["income","incomeList"],expense:["expense","expenseList"],
   receivables:["receivables","receivableList"],payables:["payables","payableList"],
