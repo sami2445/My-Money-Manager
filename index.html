@@ -104,8 +104,14 @@ header{background:#14213d;color:#fff}.top{max-width:1100px;margin:auto;padding:1
       <div class="field"><label>From Date</label><input id="txFrom" type="date" onchange="renderTransactionHistory()"></div>
       <div class="field"><label>To Date</label><input id="txTo" type="date" onchange="renderTransactionHistory()"></div>
     </div>
-    <div class="actions"><button class="btn secondary" onclick="clearTransactionFilters()">Clear Filters</button><button class="btn secondary" onclick="loadTransactionHistory()">Refresh</button></div>
+    <div class="actions">
+      <button class="btn secondary" onclick="clearTransactionFilters()">Clear Filters</button>
+      <button class="btn secondary" onclick="loadTransactionHistory()">Refresh</button>
+      <button class="btn" onclick="exportTransactionCSV()">Export Filtered CSV</button>
+      <button class="btn" onclick="downloadFullBackup()">Download Full Backup (JSON)</button>
+    </div>
     <p id="txSummary" style="margin-bottom:0;color:#687386"></p>
+    <p style="color:#687386;font-size:12px;margin-bottom:0">CSV exports the transactions matching the filters above. Full Backup downloads your accessible app tables as a JSON file; keep it somewhere private.</p>
   </div>
   <div id="transactionHistoryList"></div>
 </section>
@@ -298,10 +304,41 @@ async function loadTransactionHistory(){
  transactionHistoryRows.sort((a,b)=>String(b.date||b.sort||"").localeCompare(String(a.date||a.sort||"")));
  renderTransactionHistory();
 }
+function getFilteredTransactionRows(){
+ const type=el("txType")?.value||"all",q=(el("txSearch")?.value||"").trim().toLowerCase(),from=el("txFrom")?.value||"",to=el("txTo")?.value||"";
+ return transactionHistoryRows.filter(r=>(type==="all"||r.type===type)&&(!from||String(r.date||"").slice(0,10)>=from)&&(!to||String(r.date||"").slice(0,10)<=to)&&(!q||[r.type,r.detail,r.account,r.note,r.date].some(v=>String(v??"").toLowerCase().includes(q))));
+}
+function downloadBlob(content,mime,filename){
+ const blob=new Blob([content],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function csvCell(value){const s=String(value??"");return '"'+s.replace(/"/g,'""')+'"';}
+function exportTransactionCSV(){
+ const rows=getFilteredTransactionRows();
+ if(!rows.length){alert("There are no transactions to export with the current filters.");return;}
+ const header=["Date","Type","Person / Details","Account","Note","Amount"];
+ const lines=[header,...rows.map(r=>[String(r.date||"").slice(0,10),r.type,r.detail||"",r.account||"",r.note||"",Number(r.amount||0).toFixed(2)])].map(row=>row.map(csvCell).join(","));
+ const csv="\ufeff"+lines.join("\r\n");
+ const now=new Date().toISOString().slice(0,10);
+ downloadBlob(csv,"text/csv;charset=utf-8;","my-money-manager-transactions-"+now+".csv");
+}
+async function downloadFullBackup(){
+ if(!currentUser){alert("Please log in first.");return;}
+ const tables=["income","expense","receivables","payables","transfers","receivable_payments","payable_payments"];
+ const backup={app:"My Money Manager",version:1,created_at:new Date().toISOString(),user_email:currentUser.email||"",data:{}};
+ try{
+  for(const table of tables){
+   const {data,error}=await sb.from(table).select("*");
+   if(error)throw new Error(table+": "+error.message);
+   backup.data[table]=data||[];
+  }
+  const stamp=new Date().toISOString().replace(/[:.]/g,"-");
+  downloadBlob(JSON.stringify(backup,null,2),"application/json;charset=utf-8;","my-money-manager-backup-"+stamp+".json");
+  alert("Backup downloaded. Store the JSON file somewhere safe. It contains your financial records.");
+ }catch(error){console.error("Backup failed:",error);alert("Backup could not be completed: "+error.message+". Check that you have SELECT permission on all app tables.");}
+}
 function renderTransactionHistory(){
  const target=el("transactionHistoryList");if(!target)return;
- const type=el("txType")?.value||"all",q=(el("txSearch")?.value||"").trim().toLowerCase(),from=el("txFrom")?.value||"",to=el("txTo")?.value||"";
- const rows=transactionHistoryRows.filter(r=>(type==="all"||r.type===type)&&(!from||String(r.date||"").slice(0,10)>=from)&&(!to||String(r.date||"").slice(0,10)<=to)&&(!q||[r.type,r.detail,r.account,r.note,r.date].some(v=>String(v??"").toLowerCase().includes(q))));
+ const rows=getFilteredTransactionRows();
  const total=rows.reduce((sum,r)=>sum+r.amount,0);
  el("txSummary").textContent=`Showing ${rows.length} of ${transactionHistoryRows.length} records · Listed amounts total ${money(total)} (transfers and receivable/payable entries are included, so this is not cash balance).`;
  if(!rows.length){target.innerHTML='<div class="card empty">No transactions match these filters.</div>';return;}
