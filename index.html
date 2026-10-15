@@ -62,9 +62,9 @@ header{background:#14213d;color:#fff}.top{max-width:1100px;margin:auto;padding:1
     <button data-tab="income" onclick="tab('income')">Income</button>
     <button data-tab="expense" onclick="tab('expense')">Expense</button>
     <button data-tab="receivables" onclick="tab('receivables')">Receivable</button>
-    <button data-tab="receivablePayments" onclick="tab('receivablePayments')">Receivable Payment</button>
+    <button data-tab="receivablePayments" onclick="tab('receivablePayments')">Receive</button>
     <button data-tab="payables" onclick="tab('payables')">Payable</button>
-    <button data-tab="payablePayments" onclick="tab('payablePayments')">Payable Payment</button>
+    <button data-tab="payablePayments" onclick="tab('payablePayments')">Payment</button>
     <button data-tab="transfers" onclick="tab('transfers')">Transfers</button>
     <button data-tab="transactions" onclick="tab('transactions')">Transaction History</button>
   </div>
@@ -82,24 +82,24 @@ header{background:#14213d;color:#fff}.top{max-width:1100px;margin:auto;padding:1
     <div class="card"><h3>Quick Actions</h3><div class="actions">
       <button class="btn" onclick="openForm('income')">+ Income</button>
       <button class="btn" onclick="openForm('expense')">+ Expense</button>
-      <button class="btn" onclick="openForm('receivablePayment')">+ Receivable Payment</button>
-      <button class="btn" onclick="openForm('payablePayment')">+ Payable Payment</button>
+      <button class="btn" onclick="openForm('receivablePayment')">+ Receive</button>
+      <button class="btn" onclick="openForm('payablePayment')">+ Payment</button>
     </div></div>
   </div>
 </section>
 <section id="incomeTab" class="hidden"><div class="card section"><h2>Income</h2><button class="btn" onclick="openForm('income')">+ Add Income</button></div><div id="incomeList"></div></section>
 <section id="expenseTab" class="hidden"><div class="card section"><h2>Expense</h2><button class="btn" onclick="openForm('expense')">+ Add Expense</button></div><div id="expenseList"></div></section>
 <section id="receivablesTab" class="hidden"><div class="card section"><h2>Receivable / পাওনা</h2><button class="btn" onclick="openForm('receivable')">+ Add Receivable</button></div><div id="receivableList"></div></section>
-<section id="receivablePaymentsTab" class="hidden"><div class="card section"><h2>Receivable Payment / পাওনা আদায়</h2><p>Record full or partial payments received against a receivable.</p><button class="btn" onclick="openForm('receivablePayment')">+ Add Receivable Payment</button></div><div id="receivablePaymentsList"></div></section>
+<section id="receivablePaymentsTab" class="hidden"><div class="card section"><h2>Receive</h2><p>Record money received against a receivable.</p><button class="btn" onclick="openForm('receivablePayment')">+ Receive</button></div><div id="receivablePaymentsList"></div></section>
 <section id="payablesTab" class="hidden"><div class="card section"><h2>Payable / দেনা</h2><button class="btn" onclick="openForm('payable')">+ Add Payable</button></div><div id="payableList"></div></section>
-<section id="payablePaymentsTab" class="hidden"><div class="card section"><h2>Payable Payment / দেনা পরিশোধ</h2><p>Record full or partial payments made against a payable.</p><button class="btn" onclick="openForm('payablePayment')">+ Add Payable Payment</button></div><div id="payablePaymentsList"></div></section>
+<section id="payablePaymentsTab" class="hidden"><div class="card section"><h2>Payment</h2><p>Record money paid against a payable.</p><button class="btn" onclick="openForm('payablePayment')">+ Payment</button></div><div id="payablePaymentsList"></div></section>
 <section id="transfersTab" class="hidden"><div class="card section"><h2>Cash / Bank Transfer</h2><button class="btn" onclick="openForm('transfer')">+ Add Transfer</button></div><div id="transferList"></div></section>
 <section id="transactionsTab" class="hidden">
   <div class="card section">
     <h2>Transaction History / সকল লেনদেন</h2>
     <p>Income, expense, payments, transfers এবং পাওনা/দেনা তৈরি—সব এক জায়গায় দেখুন।</p>
     <div class="form-grid">
-      <div class="field"><label>Transaction Type</label><select id="txType" onchange="renderTransactionHistory()"><option value="all">All Types</option><option value="Income">Income</option><option value="Expense">Expense</option><option value="Receivable Payment">Receivable Payment</option><option value="Payable Payment">Payable Payment</option><option value="Transfer">Transfer</option><option value="Receivable Created">Receivable Created</option><option value="Payable Created">Payable Created</option></select></div>
+      <div class="field"><label>Transaction Type</label><select id="txType" onchange="renderTransactionHistory()"><option value="all">All Types</option><option value="Income">Income</option><option value="Expense">Expense</option><option value="Receivable Payment">Receive</option><option value="Payable Payment">Payment</option><option value="Transfer">Transfer</option><option value="Receivable Created">Receivable Created</option><option value="Payable Created">Payable Created</option></select></div>
       <div class="field"><label>Search</label><input id="txSearch" type="search" placeholder="Name, account, note..." oninput="renderTransactionHistory()"></div>
       <div class="field"><label>From Date</label><input id="txFrom" type="date" onchange="renderTransactionHistory()"></div>
       <div class="field"><label>To Date</label><input id="txTo" type="date" onchange="renderTransactionHistory()"></div>
@@ -184,7 +184,7 @@ async function getPayments(table,foreignKey){
 }
 async function openForm(type){
  formType=type;el("modal").classList.remove("hidden");
- const titles={income:"Add Income",expense:"Add Expense",receivable:"Add Receivable",payable:"Add Payable",transfer:"Add Transfer",receivablePayment:"Add Receivable Payment",payablePayment:"Add Payable Payment"};
+ const titles={income:"Add Income",expense:"Add Expense",receivable:"Add Receivable",payable:"Add Payable",transfer:"Add Transfer",receivablePayment:"Receive",payablePayment:"Payment"};
  el("modalTitle").textContent=titles[type]||"Add Entry";
  let h="";
  if(type==="income"||type==="expense"){
